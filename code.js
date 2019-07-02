@@ -163,27 +163,27 @@ function drawOver(){
 
 				cx = inOut[0].x; //retrieve X and Y co-ords for adjcency tests, from the start of the stack
 				cy = inOut[0].y;
-				r = getPixelCol(cx, cy, 0); // get cell value
-				if (r + dr > 255) { dr = -1; }
-				if (r + dr < 0) { dr = 1; }
+				r = getPixelCol(canvasData, cx, cy, 0); // get cell value
+				if (r + dv > 255) { dv = -1; }
+				if (r + dv < 0) { dv = 1; }
 				
-				drawPixel(cx, cy, r, 2, 128, 255); //set cell as "visited"  //using pixel value
+				drawPixel(canvasData, cx, cy, r, 2, 128, 255); //set cell as "visited"  //using pixel value
 			
 				if (testCell (cx - 1, cy)){ //test west
 					inOut.push(new coords(cx - 1, cy)); //push cell
-					drawPixel (cx - 1, cy, r + dr, 1, 255, 255); //set value + 1, set "seen": temp
+					drawPixel (canvasData, cx - 1, cy, r + dv, 1, 255, 255); //set value + 1, set "seen": temp
 				}
 				if (testCell (cx + 1, cy)){ //tes east
 					inOut.push(new coords(cx + 1, cy)); //push cell
-					drawPixel (cx + 1, cy, r + dr, 1, 255, 255); //set value + 1, set "seen": temp
+					drawPixel (canvasData, cx + 1, cy, r + dv, 1, 255, 255); //set value + 1, set "seen": temp
 				}
 				if (testCell (cx, cy - 1)){ //test north
 					inOut.push(new coords(cx, cy - 1)); //push cell
-					drawPixel (cx, cy - 1, r + dr, 1, 255, 255);  //set value + 1, set "seen": temp
+					drawPixel (canvasData, cx, cy - 1, r + dv, 1, 255, 255);  //set value + 1, set "seen": temp
 				}
 				if (testCell (cx, cy + 1)){ //test south
 					inOut.push(new coords(cx, cy + 1)); //push cell
-					drawPixel (cx, cy + 1, r + dr, 1, 255, 255);  //set value + 1, set "seen": temp
+					drawPixel (canvasData, cx, cy + 1, r + dv, 1, 255, 255);  //set value + 1, set "seen": temp
 				}
 
 				inOut.shift(); //remove front of the stack
