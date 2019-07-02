@@ -9,8 +9,10 @@ var meshWidth, meshHeight, meshArray; // used to lay out the tiles
 
 //HTML enters here 
 function startScript() {
-	let pM = 0;
-	if ((!pM) || (pM == 254)) { console.log("pM: trueth");} else { console.log("pM: falseth");}
+	//testing Boolean JS behaviour
+	//let pM = 0;
+	//if ((!pM) || (pM == 254)) { console.log("pM: trueth");} else { console.log("pM: falseth");}
+	
 	//set page Title to the file-folder
 	var locationName = window.location.pathname.split("/");
 	document.title = locationName[locationName.length-2];
@@ -53,7 +55,7 @@ function drawTiles(){
 	meshWidth = Math.round(canvasWidth / 16); // 16 pixel width for cell images
 	meshHeight = Math.round(canvasHeight / 16); // 16 pixel height for cell images
 
-	var openPaths = 0;
+	var openPaths = 0; //calculated final value of NSEW, for current cell
 	meshArray = new Array(meshHeight); // first part of 2D array to store compass values
 	for (var y = 0; y < meshHeight; y++) {
 		meshArray[y] = new Array(meshWidth); //second dimension of array to store compass values
@@ -151,39 +153,59 @@ function drawOver(){
 
 			if (pixelMask[i] != 255) { continue; } //jump this iteration if pixel is a gap, or visited?
 
-			value = 128; //start new section at base value: 0;
+			value = 128; 			//start new section at base value: 0;
 			pixelData[i] = value; 	//immediately set pixel colour
-			pixelMask[i] = 254;	//mark pixel as visited
+			pixelMask[i] = 254;		//mark pixel as visited
 
 			inOut = [new coords(x,y)]; //start the stack with the first pixel
 
-			loopCount = 0
-			while (inOut.length > 0 || loopCount > 150) { //need to test vs "coords.x/.y" not pixel x/y
-				loopCount++;
+			loopCount = 0 //safety cap to prevent infinite loop during dev
+			while (inOut.length > 0 && loopCount < 16) { //test if inOut stack exhausted
+				loopCount++; //safety cap: +1 looped.
+				console.log(loopCount);
 
-				cx = inOut[0].x; //retrieve X and Y co-ords for adjcency tests, from the start of the stack
-				cy = inOut[0].y;
-				r = getPixelCol(canvasData, cx, cy, 0); // get cell value
-				if (r + dv > 255) { dv = -1; }
-				if (r + dv < 0) { dv = 1; }
+				let cx = inOut[0].x; //retrieve X and Y co-ords for adjcency tests from first element, from the start of the stack
+				let cy = inOut[0].y;
+				let ci = xy2i(cx, cy);
+				let ciaj; // ci value for adjacency calculations
+				//r = getPixelCol(canvasData, cx, cy, 0); // get cell value
+				//if (r + dv > 255) { dv = -1; }
+				//if (r + dv < 0) { dv = 1; }
+				value = pixelData[ci]; //(canvasData, cx, cy, 0); // get cell value
+				value += dv; // in/decrement by dv
+				if ((value > 255) || (value < 0)) { dv *= -1; value += dv;} // if out-of-bounds, flip dv, and recover in-bounds
 				
-				drawPixel(canvasData, cx, cy, r, 2, 128, 255); //set cell as "visited"  //using pixel value
+				//drawPixel(canvasData, cx, cy, r, 2, 128, 255); //set cell as "visited"  //using pixel value
+				pixelMask[ci] = 254; //set cell as "visited"
+				pixelData[ci] = value; //set value for cell
 			
+				ciaj = xy2i(cx-1, cy);
 				if (testCell (cx - 1, cy)){ //test west
 					inOut.push(new coords(cx - 1, cy)); //push cell
-					drawPixel (canvasData, cx - 1, cy, r + dv, 1, 255, 255); //set value + 1, set "seen": temp
+					//drawPixel (canvasData, cx - 1, cy, value + dv, 1, 255, 255); //set value + 1, set "seen": temp
+					pixelMask[ciaj] = 254;
+					pixelData[ciaj] = value + dv;
 				}
-				if (testCell (cx + 1, cy)){ //tes east
+				ciaj = xy2i(cx+1, cy);
+				if (testCell (cx + 1, cy)){ //test east
 					inOut.push(new coords(cx + 1, cy)); //push cell
-					drawPixel (canvasData, cx + 1, cy, r + dv, 1, 255, 255); //set value + 1, set "seen": temp
+					//drawPixel (canvasData, cx + 1, cy, value + dv, 1, 255, 255); //set value + 1, set "seen": temp
+					pixelMask[ciaj] = 254;
+					pixelData[ciaj] = value + dv;
 				}
+				ciaj = xy2i(cx, cy-1);
 				if (testCell (cx, cy - 1)){ //test north
 					inOut.push(new coords(cx, cy - 1)); //push cell
-					drawPixel (canvasData, cx, cy - 1, r + dv, 1, 255, 255);  //set value + 1, set "seen": temp
+					//drawPixel (canvasData, cx, cy - 1, value + dv, 1, 255, 255);  //set value + 1, set "seen": temp
+					pixelMask[ciaj] = 254;
+					pixelData[ciaj] = value + dv;
 				}
+				ciaj = xy2i(cx, cy+1);
 				if (testCell (cx, cy + 1)){ //test south
 					inOut.push(new coords(cx, cy + 1)); //push cell
-					drawPixel (canvasData, cx, cy + 1, r + dv, 1, 255, 255);  //set value + 1, set "seen": temp
+					//drawPixel (canvasData, cx, cy + 1, value + dv, 1, 255, 255);  //set value + 1, set "seen": temp
+					pixelMask[ciaj] = 254;
+					pixelData[ciaj] = value + dv;
 				}
 
 				inOut.shift(); //remove front of the stack
@@ -210,6 +232,17 @@ function drawOver(){
 	}
 	/* */
 
+	console.log("stopped:", loopCount);
+
+	function testCell (x, y){
+		if (!(x < 0 || y < 0 || x > canvasWidth || y > canvasHeight)) { //test co-ordinates vs edge of world
+			// ?? possible to just "return pixelMask[xy2i(x, y)];" ?
+			if (pixelMask[xy2i(x, y)] == 255) { //if "not touched"/ is black ... neither seen nor visited
+				return true; 
+			}
+		}
+		return false;
+	}
 
 
 
