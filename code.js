@@ -8,9 +8,9 @@ for (var i = 0; i < 16; i++) {
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
 
-const backgroundColor = "#000400";
+const backgroundColor = "#000280";
 const startColor = "#000280";
-const endColor = "#ee0280";
+const endColor = "#ff0280";
 
 var bgArray = color2Array(backgroundColor);
 var scArray = color2Array(startColor);
@@ -88,7 +88,7 @@ function drawTiles(){
 			}
 			//east path - random chance
 			if (x < meshWidth - 1) { // if not last column
-				if (randomInt(10) > 4) { openPaths += compass.e; }
+				if (randomInt(10) > 5) { openPaths += compass.e; }
 			}
 			//north path - check south
 			if (y > 0) { // if not first row
@@ -158,7 +158,6 @@ function drawOver(){
 			i = xy2i(x, y);
 
 			if (pixelMask[i] != 255) { continue; } //jump this iteration if pixel is a gap, or visited?
-
 			value = 0; 			//start new section at base value: 0;
 			pixelData[i] = value; 	//immediately set pixel colour
 			pixelMask[i] = 254;		//mark pixel as visited
