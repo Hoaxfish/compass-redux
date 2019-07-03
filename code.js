@@ -1,9 +1,28 @@
 var canvas, ctx, canvasData, canvasWidth, canvasHeight;
 var canvasData;
 var cellImgs = new Array(16); //cell tiles array
-const backgroundColor = "#000400";//"#000400";
-const startColor = "#ff0000";
-const endColor = "#0000ff";
+
+// basic pre-loader
+for (var i = 0; i < 16; i++) {
+	cellImgs[i] = new Image(); // Create new img element
+	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
+}
+
+const backgroundColor = "#000400";
+const startColor = "#000280";
+const endColor = "#ee0280";
+
+var bgArray = color2Array(backgroundColor);
+var scArray = color2Array(startColor);
+var ecArray = color2Array(endColor);
+
+function color2Array(color) {
+	return [
+		parseInt(color.substring(1,3),16),
+		parseInt(color.substring(3,5),16),
+		parseInt(color.substring(5),16),
+	];
+}
 
 var meshWidth, meshHeight, meshArray; // used to lay out the tiles
 
@@ -13,7 +32,12 @@ function startScript() {
 	var locationName = window.location.pathname.split("/");
 	document.title = locationName[locationName.length-2];
 
-	loadPromises().then(drawPhase); //once everything is loaded, draw out the images
+	//uses Promises to guarantee image files are loaded
+	//loadPromises().then(drawPhase); //once everything is loaded, draw out the images
+
+	//just assume images are (pre-)loaded... faster
+	ctxIniPromise();
+	drawPhase();
 }
 
 function loadPromises(){
@@ -38,7 +62,7 @@ function imgPromise(i) { //generate a Promise for loading each tile-image
 async function ctxIniPromise(){ //initialise the canvas and ctx variables, async makes it into a Promise
 	canvas = document.getElementById("myCanvas");
 	ctx = canvas.getContext("2d");
-	
+
 	canvasWidth = canvas.width; canvasHeight = canvas.height;
 }
 
@@ -60,11 +84,11 @@ function drawTiles(){
 			
 			//south path - random chance
 			if (y < meshHeight - 1) { // if not last row
-				if (randomInt(10) > 5) { openPaths += compass.s; }
+				if (randomInt(10) > 4) { openPaths += compass.s; }
 			}
 			//east path - random chance
 			if (x < meshWidth - 1) { // if not last column
-				if (randomInt(10) > 5) { openPaths += compass.e; }
+				if (randomInt(10) > 4) { openPaths += compass.e; }
 			}
 			//north path - check south
 			if (y > 0) { // if not first row
@@ -125,21 +149,8 @@ function drawOver(){
 	var pixelMask = canvasData.data.filter((position, index) => index%4 == 3); //isolate alpha-data. x1 per pixel
 	var pixelData = new Uint8ClampedArray(new ArrayBuffer(pixelMask.length)); //make an empty array, 256 value per pixel. x1 per pixel
 
-	//calculate values, between 0 and 255
-	/*
-	let value = 128;
-	let dv = 1;
-	for (let index = 0; index < pixelMask.length; index++) {
-		if (pixelMask[index]){ // test if gap
-			pixelData[index] = value; //set value of current pixel
-			value += dv;
-			if ((value > 255) || (value < 0)) { dv *= -1; value += 2 * dv;}
-		}
-	}
-	*/
-
 	let inOut = []; //inOut is a Queue, push items to end, shift them from the front
-	let value;
+	let value;// = 0;
 	let dv = 1;
 	let i;
 	for (var y = 0; y < canvasHeight; y++) {
@@ -162,43 +173,28 @@ function drawOver(){
 				let cx = inOut[0].x; //retrieve X and Y co-ords for adjcency tests from first element, from the start of the stack
 				let cy = inOut[0].y;
 				let ci = xy2i(cx, cy);
-				let ciaj; // ci value for adjacency calculations
 
 				value = pixelData[ci]; // get cell value
-				if (value + dv > 255) { dv = -1; }
-				if (value + dv < 0) { dv = 1; }
+				if ((value + dv > 255) || (value + dv < 0)) { dv *= -1;}
 				
-				pixelMask[ci] = 254; //set cell as "visited"
-				pixelData[ci] = value; //set value for cell
+				setCellValue(cx, cy, value);
 			
 				//test "can I go here next?"
 				if (canMoveTo (cx - 1, cy)){ //test west
-					ciaj = xy2i(cx-1, cy);
 					inOut.push(new coords(cx - 1, cy)); //push cell
-					//set cell cx-1: value, set "seen": temp
-					pixelMask[ciaj] = 254;
-					pixelData[ciaj] = value + dv;
+					setCellValue(cx - 1, cy, value + dv); //set cell cx - 1: value, set "seen": temp
 				}
 				if (canMoveTo (cx + 1, cy)){ //test east
-					ciaj = xy2i(cx+1, cy);
 					inOut.push(new coords(cx + 1, cy)); //push cell
-					//set cell cx+1: value, set "seen": temp
-					pixelMask[ciaj] = 254;
-					pixelData[ciaj] = value + dv;
+					setCellValue(cx + 1, cy, value + dv); //set cell cx + 1: value, set "seen": temp
 				}
 				if (canMoveTo (cx, cy - 1)){ //test north
-					ciaj = xy2i(cx, cy-1);
 					inOut.push(new coords(cx, cy - 1)); //push cell
-					//set cell cy-1: value, set "seen": temp
-					pixelMask[ciaj] = 254;
-					pixelData[ciaj] = value + dv;
+					setCellValue(cx, cy - 1, value + dv); //set cell cy - 1: value, set "seen": temp
 				}
 				if (canMoveTo (cx, cy + 1)){ //test south
-					ciaj = xy2i(cx, cy+1);
 					inOut.push(new coords(cx, cy + 1)); //push cell
-					//set cell cy+1: value, set "seen": temp
-					pixelMask[ciaj] = 254;
-					pixelData[ciaj] = value + dv;
+					setCellValue(cx, cy + 1, value + dv); //set cell cy + 1: value, set "seen": temp
 				}
 
 				inOut.shift(); //remove front of the stack
@@ -208,44 +204,51 @@ function drawOver(){
 	}
 
 	function canMoveTo (x, y){
-		if (!(x < 0 || y < 0 || x > canvasWidth || y > canvasHeight)) { //test co-ordinates vs edge of world
-			return (pixelMask[xy2i(x, y)] == 255); // true: if not visited & not avoid
-		}
-		return false;
+		if (x < 0 || y < 0 || x > canvasWidth || y > canvasHeight) { return false; } //test co-ordinates vs edge of world
+		return (pixelMask[xy2i(x, y)] == 255); // true only if not visited & not avoid
+	}
+
+	function setCellValue (x, y, value){
+		ciaj = xy2i(x, y);
+		pixelMask[ciaj] = 254;
+		pixelData[ciaj] = value + dv;
 	}
 
 
 	//draw it all back to the canvasData
 	for (let i = 0; i < pixelMask.length; i++) {
+		var i4 = i * 4;
 		if (pixelMask[i]) { //draw pixelData + lerp for custom colours
-			drawPixel(canvasData, i2x(i*4), i2y(i*4), pixelData[i], 0, 0, 255);
+			drawPixel(canvasData, i4, pixelData[i], pixelData[i], pixelData[i]);
 		} else { //draw background colour
-			drawPixelBack(canvasData, i*4);
+			drawPixelBack(canvasData, i4);
 		}
 	}
+	/* */
 
 	//draw values back to canvasData, then canvasData back to the ctx
 	ctx.putImageData(canvasData, 0, 0);
 }
 
+//not used?
 //get either r, g, b, or a value of pixel
 function getPixelCol(canvasData, x, y, c) {
 	var index = xy2i(x, y) * 4;
 	return canvasData.data[index + c];
 }
 
-function drawPixel (canvasData, x, y, r, g, b, a) {
-    var index = xy2i(x, y) * 4;
-    canvasData.data[index + 0] = r;
-    canvasData.data[index + 1] = g;
-    canvasData.data[index + 2] = b;
-    canvasData.data[index + 3] = a;
+function drawPixel (canvasData, index, r, g, b) {
+    //var index = xy2i(x, y) * 4;
+    canvasData.data[index + 0] = clerp(0, r);//r;
+    canvasData.data[index + 1] = clerp(1, g);//g;
+    canvasData.data[index + 2] = clerp(2, b);//b;
+    canvasData.data[index + 3] = 255;
 }
 
 function drawPixelBack (canvasData, index){
-	canvasData.data[index + 0] = parseInt(backgroundColor.substring(1,3),16);
-	canvasData.data[index + 1] = parseInt(backgroundColor.substring(3,5),16);
-	canvasData.data[index + 2] = parseInt(backgroundColor.substring(5),16);
+	canvasData.data[index + 0] = bgArray[0];
+	canvasData.data[index + 1] = bgArray[1];
+	canvasData.data[index + 2] = bgArray[2];
     canvasData.data[index + 3] = 255;
 }
 
@@ -253,6 +256,12 @@ function drawPixelBack (canvasData, index){
 function i2x (index) {return Math.floor(index / 4)%canvasWidth; } // convert index in 1D array to X coords
 function i2y (index) {return Math.floor(index / (4 * canvasWidth)); } // convert index in 1D array to Y coords
 function xy2i (x, y) {return (x + y * canvasWidth); } //convert 2D x and y co-ords to single 1D i co-ord
+
+function clerp(c, value) {
+	return value * Math.abs(ecArray[c] - scArray[c]) / 255 + scArray[c];
+	//if (c == 1) {return value;}
+	//return 0;
+}
 
 // storing x, y coordinates
 class coords {
