@@ -8,9 +8,15 @@ for (var i = 0; i < 16; i++) {
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
 
+/*
 const backgroundColor = "#000280";
 const startColor = "#000280";
 const endColor = "#ff0280";
+/* */
+const backgroundColor = "#000080";
+const startColor = "#000080";
+const endColor = "#ff0000";
+
 
 var bgArray = color2Array(backgroundColor);
 var scArray = color2Array(startColor);
@@ -256,10 +262,8 @@ function i2x (index) {return Math.floor(index / 4)%canvasWidth; } // convert ind
 function i2y (index) {return Math.floor(index / (4 * canvasWidth)); } // convert index in 1D array to Y coords
 function xy2i (x, y) {return (x + y * canvasWidth); } //convert 2D x and y co-ords to single 1D i co-ord
 
-function clerp(c, value) {
-	return value * Math.abs(ecArray[c] - scArray[c]) / 255 + scArray[c];
-	//if (c == 1) {return value;}
-	//return 0;
+function clerp(c, value) { //work from lowest value
+	return value * (ecArray[c] - scArray[c]) / 255 + scArray[c];
 }
 
 // storing x, y coordinates
