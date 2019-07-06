@@ -7,9 +7,15 @@ for (var i = 0; i < 16; i++) {
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
 
-const backgroundColor = "#000280"; //"#000080";
-const startColor = "#000280"; //"#000080";
-const endColor = "#ff0280"; //"#ff0000";
+/*
+const backgroundColor = "#000280"; 
+const startColor = "#000280"; 
+const endColor = "#ff0280"; 
+/* */
+
+const backgroundColor = "#000000"; 
+const startColor = "#aa0280"; 
+const endColor = "#ff0280"; 
 
 var bgArray = color2Array(backgroundColor);
 var scArray = color2Array(startColor);
@@ -157,7 +163,7 @@ function drawOver(){
 			i = xy2i(x, y);
 
 			if (pixelMask[i] != 255) {
-				if (!pixelMask[i]) {
+				if (pixelMask[i] == 0) {
 					drawPixelBack(canvasData, i); // if "gap" draw final pixel immediately
 				}
 				continue;
@@ -229,7 +235,13 @@ function drawPixel (canvasData, index, r, g, b) {
     canvasData.data[index4 + 2] = clerp(2, b);//b;
     canvasData.data[index4 + 3] = 255;
 }
-function drawPixelBack (canvasData, index){ drawPixel(canvasData, index, bgArray[0], bgArray[1], bgArray[2]); }
+function drawPixelBack (canvasData, index){
+	var index4 = index * 4;
+    canvasData.data[index4 + 0] = bgArray[0];//r;
+    canvasData.data[index4 + 1] = bgArray[1];//g;
+    canvasData.data[index4 + 2] = bgArray[2];//b;
+    canvasData.data[index4 + 3] = 255;
+}
 function clerp(c, value) { return value * (ecArray[c] - scArray[c]) / 255 + scArray[c]; }
 
 function i2x (index) {return Math.floor(index/4)%canvasWidth; } // convert index in 1D array to X coords
