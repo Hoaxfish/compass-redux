@@ -62,6 +62,8 @@ async function ctxIniPromise(){ //initialise the canvas and ctx variables, async
 	ctx = canvas.getContext("2d");
 
 	canvasWidth = canvas.width; canvasHeight = canvas.height;
+
+	ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
 function drawPhase(){
@@ -141,10 +143,10 @@ function CheckBitState(vValue, bSet) { return (vValue & bSet) != 0;}
 // canvasData x4 : paint over old canvasData with new values based on pixelData, test vs pixelMask for breaks
 
 function drawOver(){
-	var canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight); //at this point, alpha-channel is either 0 (gap) or 255 (fill). x4 per pixel
+	let canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight); //at this point, alpha-channel is either 0 (gap) or 255 (fill). x4 per pixel
 
-	var pixelMask = canvasData.data.filter((position, index) => index%4 == 3); //isolate alpha-data. x1 per pixel
-	var pixelData = new Uint8ClampedArray(new ArrayBuffer(pixelMask.length)); //make an empty array, 256 value per pixel. x1 per pixel
+	let pixelMask = canvasData.data.filter((position, index) => index%4 == 3); //isolate alpha-data. x1 per pixel
+	let pixelData = new Uint8ClampedArray(new ArrayBuffer(pixelMask.length)); //make an empty array, 256 value per pixel. x1 per pixel
 
 	let inOut = []; //inOut is a Queue, push items to end, shift them from the front
 	let value;// = 0;
