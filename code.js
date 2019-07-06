@@ -8,15 +8,15 @@ for (var i = 0; i < 16; i++) {
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
 
-/*
+
 const backgroundColor = "#000280";
 const startColor = "#000280";
 const endColor = "#ff0280";
-/* */
+/*
 const backgroundColor = "#000080";
 const startColor = "#000080";
 const endColor = "#ff0000";
-
+/* */
 
 var bgArray = color2Array(backgroundColor);
 var scArray = color2Array(startColor);
@@ -46,6 +46,7 @@ function startScript() {
 	drawPhase();
 }
 
+//complicated preloader
 function loadPromises(){
 	var arr = []; // temp array of promises
 	for (var i = 0; i < cellImgs.length; i++) { arr[i] = imgPromise(i);	}
@@ -141,7 +142,6 @@ const compass = {
 
 	all:15		//1111 - 15 - N+E+S+W
 }
-
 function CheckBitState(vValue, bSet) { return (vValue & bSet) != 0;}
 
 // canvasData x4 : data read directly from the canvas, including drawn tile: read alpha channel to determine gaps (0:false) or fill (255:true)
@@ -163,7 +163,12 @@ function drawOver(){
 		for (var x = 0; x < canvasWidth; x++) {
 			i = xy2i(x, y);
 
-			if (pixelMask[i] != 255) { continue; } //jump this iteration if pixel is a gap, or visited?
+			if (pixelMask[i] != 255) {
+				if (!pixelMask[i]) {
+					drawPixelBack(canvasData, i); // if "gap" draw final pixel immediately
+				}
+				continue;
+			} //jump this iteration if pixel is a gap, or visited?
 			value = 0; 			//start new section at base value: 0;
 			pixelData[i] = value; 	//immediately set pixel colour
 			pixelMask[i] = 254;		//mark pixel as visited
@@ -183,6 +188,7 @@ function drawOver(){
 				if ((value + dv > 255) || (value + dv < 0)) { dv *= -1;}
 				
 				setCellValue(cx, cy, value);
+				drawPixel(canvasData, ci, value, value, value); // draw final pixel immediately
 			
 				//test "can I go here next?"
 				if (canMoveTo (cx - 1, cy)){ //test west
@@ -219,52 +225,23 @@ function drawOver(){
 		pixelData[ciaj] = value + dv;
 	}
 
-
-	//draw it all back to the canvasData
-	for (let i = 0; i < pixelMask.length; i++) {
-		var i4 = i * 4;
-		if (pixelMask[i]) { //draw pixelData + lerp for custom colours
-			drawPixel(canvasData, i4, pixelData[i], pixelData[i], pixelData[i]);
-		} else { //draw background colour
-			drawPixelBack(canvasData, i4);
-		}
-	}
-	/* */
-
-	//draw values back to canvasData, then canvasData back to the ctx
+	//draw canvasData back to the ctx
 	ctx.putImageData(canvasData, 0, 0);
 }
 
-//not used?
-//get either r, g, b, or a value of pixel
-function getPixelCol(canvasData, x, y, c) {
-	var index = xy2i(x, y) * 4;
-	return canvasData.data[index + c];
-}
-
 function drawPixel (canvasData, index, r, g, b) {
-    //var index = xy2i(x, y) * 4;
-    canvasData.data[index + 0] = clerp(0, r);//r;
-    canvasData.data[index + 1] = clerp(1, g);//g;
-    canvasData.data[index + 2] = clerp(2, b);//b;
-    canvasData.data[index + 3] = 255;
+	var index4 = index * 4;
+    canvasData.data[index4 + 0] = clerp(0, r);//r;
+    canvasData.data[index4 + 1] = clerp(1, g);//g;
+    canvasData.data[index4 + 2] = clerp(2, b);//b;
+    canvasData.data[index4 + 3] = 255;
 }
+function drawPixelBack (canvasData, index){ drawPixel(canvasData, index, bgArray[0], bgArray[1], bgArray[2]); }
+function clerp(c, value) { return value * (ecArray[c] - scArray[c]) / 255 + scArray[c]; }
 
-function drawPixelBack (canvasData, index){
-	canvasData.data[index + 0] = bgArray[0];
-	canvasData.data[index + 1] = bgArray[1];
-	canvasData.data[index + 2] = bgArray[2];
-    canvasData.data[index + 3] = 255;
-}
-
-
-function i2x (index) {return Math.floor(index / 4)%canvasWidth; } // convert index in 1D array to X coords
-function i2y (index) {return Math.floor(index / (4 * canvasWidth)); } // convert index in 1D array to Y coords
+function i2x (index) {return Math.floor(index/4)%canvasWidth; } // convert index in 1D array to X coords
+function i2y (index) {return Math.floor(index/(4*canvasWidth)); } // convert index in 1D array to Y coords
 function xy2i (x, y) {return (x + y * canvasWidth); } //convert 2D x and y co-ords to single 1D i co-ord
-
-function clerp(c, value) { //work from lowest value
-	return value * (ecArray[c] - scArray[c]) / 255 + scArray[c];
-}
 
 // storing x, y coordinates
 class coords {
