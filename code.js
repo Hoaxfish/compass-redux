@@ -1,5 +1,4 @@
-var canvas, ctx, canvasData, canvasWidth, canvasHeight;
-var canvasData;
+var canvas, ctx, canvasWidth, canvasHeight;
 var cellImgs = new Array(16); //cell tiles array
 
 // basic pre-loader
@@ -8,15 +7,9 @@ for (var i = 0; i < 16; i++) {
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
 
-
-const backgroundColor = "#000280";
-const startColor = "#000280";
-const endColor = "#ff0280";
-/*
-const backgroundColor = "#000080";
-const startColor = "#000080";
-const endColor = "#ff0000";
-/* */
+const backgroundColor = "#000280"; //"#000080";
+const startColor = "#000280"; //"#000080";
+const endColor = "#ff0280"; //"#ff0000";
 
 var bgArray = color2Array(backgroundColor);
 var scArray = color2Array(startColor);
@@ -29,8 +22,6 @@ function color2Array(color) {
 		parseInt(color.substring(5),16),
 	];
 }
-
-var meshWidth, meshHeight, meshArray; // used to lay out the tiles
 
 //HTML enters here 
 function startScript() {
@@ -79,11 +70,11 @@ function drawPhase(){
 }
 
 function drawTiles(){
-	meshWidth = Math.round(canvasWidth / 16); // 16 pixel width for cell images
-	meshHeight = Math.round(canvasHeight / 16); // 16 pixel height for cell images
+	var meshWidth = Math.round(canvasWidth / 16); // 16 pixel width for cell images
+	var meshHeight = Math.round(canvasHeight / 16); // 16 pixel height for cell images
 
 	var openPaths = 0; //calculated final value of NSEW, for current cell
-	meshArray = new Array(meshHeight); // first part of 2D array to store compass values
+	var meshArray = new Array(meshHeight); // first part of 2D array to store compass values
 	for (var y = 0; y < meshHeight; y++) {
 		meshArray[y] = new Array(meshWidth); //second dimension of array to store compass values
 		for (var x = 0; x < meshWidth; x++) {
@@ -150,7 +141,7 @@ function CheckBitState(vValue, bSet) { return (vValue & bSet) != 0;}
 // canvasData x4 : paint over old canvasData with new values based on pixelData, test vs pixelMask for breaks
 
 function drawOver(){
-	canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight); //at this point, alpha-channel is either 0 (gap) or 255 (fill). x4 per pixel
+	var canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight); //at this point, alpha-channel is either 0 (gap) or 255 (fill). x4 per pixel
 
 	var pixelMask = canvasData.data.filter((position, index) => index%4 == 3); //isolate alpha-data. x1 per pixel
 	var pixelData = new Uint8ClampedArray(new ArrayBuffer(pixelMask.length)); //make an empty array, 256 value per pixel. x1 per pixel
