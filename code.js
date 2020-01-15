@@ -2,10 +2,12 @@ var canvas, ctx, canvasWidth, canvasHeight;
 var cellImgs = new Array(16); //cell tiles array
 
 // basic pre-loader
+/*
 for (var i = 0; i < 16; i++) {
 	cellImgs[i] = new Image(); // Create new img element
 	cellImgs[i].src = 'images/tri-' + (i < 10 ? '0' : '') + i + '.png'; // Set source path
 }
+/* */
 
 /*
 const backgroundColor = "#000280"; 
@@ -36,11 +38,11 @@ function startScript() {
 	document.title = locationName[locationName.length-2];
 
 	//uses Promises to guarantee image files are loaded
-	//loadPromises().then(drawPhase); //once everything is loaded, draw out the images
+	loadPromises().then(drawPhase); //once everything is loaded, draw out the images
 
 	//just assume images are (pre-)loaded... faster
-	ctxIniPromise();
-	drawPhase();
+	//ctxIniPromise();
+	//drawPhase();
 }
 
 //complicated preloader
